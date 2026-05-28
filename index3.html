@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquid Glass Dialer Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #0f172a;
+        }
+
+        /* Apple Liquid Glass Morphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(30px) saturate(220%);
+            -webkit-backdrop-filter: blur(30px) saturate(220%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05), inset 0 1px 2px rgba(255,255,255,0.8);
+            transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1), border 0.6s ease;
+        }
+
+        /* Liquid Glass Buttons */
+        .glass-button {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8), 0 4px 12px rgba(0,0,0,0.02);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s;
+        }
+
+        /* Dynamic Expand Ripple (ColorOS + Google Mix) */
+        .glass-button::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.5) 0%, rgba(59, 130, 246, 0) 75%);
+            opacity: 0;
+            transform: scale(0.3);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .glass-button:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.75);
+        }
+
+        .glass-button:active::after {
+            opacity: 1;
+            transform: scale(2.8);
+            transition: 0s;
+        }
+
+        /* Fluid Layer Animations */
+        @keyframes liquidWave {
+            0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+            50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.15); }
+            100% { transform: translate(-50%, -50%) rotate(360deg) scale(1); }
+        }
+
+        .liquid-bg-layer {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            width: 650px;
+            height: 650px;
+            background: radial-gradient(circle, rgba(14,165,233,0.25) 0%, rgba(99,102,241,0.15) 40%, rgba(255,255,255,0) 70%);
+            border-radius: 43%;
+            animation: liquidWave 14s infinite linear;
+            z-index: 0;
+            pointer-events: none;
+            transition: background 0.8s ease;
+        }
+
+        /* Pulse for Active Elements */
+        .pulse-slow { animation: pulseGlow 2.5s infinite ease-in-out; }
+        @keyframes pulseGlow { 0%, 100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.95); } }
+
+        /* Google Dialer Dynamic Themes */
+        .theme-spam { background: rgba(239, 68, 68, 0.15) !important; border-color: rgba(239, 68, 68, 0.4) !important; }
+        .theme-verified { background: rgba(16, 185, 129, 0.15) !important; border-color: rgba(16, 185, 129, 0.4) !important; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-0 m-0 select-none bg-slate-950">
+
+    <div class="relative w-full max-w-[430px] h-screen bg-slate-900 flex flex-col justify-between overflow-hidden p-4 pb-8 shadow-2xl">
+        
+        <div id="liquid-engine" class="liquid-bg-layer"></div>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] z-0 pointer-events:none"></div>
+        
+        <div id="app-panel" class="glass-panel w-full flex-1 mt-6 rounded-[42px] p-5 flex flex-col justify-between overflow-hidden z-10">
+            
+            <div class="text-center pt-4 transition-all duration-500">
+                <div id="google-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/40 border border-white/40 text-slate-700 text-xs font-bold shadow-xs mb-3 opacity-0 transition-all duration-300 transform translate-y-[-4px]">
+                    <span id="badge-icon"></span>
+                    <span id="badge-text">Verified Business</span>
+                </div>
+
+                <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+                    <div id="avatar-glow" class="absolute inset-0 bg-blue-400/20 rounded-full scale-110 blur-md opacity-0 transition-opacity duration-500"></div>
+                    <div id="avatar" class="relative w-20 h-20 bg-white/50 rounded-full flex items-center justify-center border border-white/70 shadow-sm text-2xl font-bold text-slate-700 transition-transform duration-500">GS</div>
+                </div>
+
+                <h2 id="contact-name" class="text-xl font-bold text-slate-800 mt-3 tracking-tight">GM VT</h2>
+                <p id="dial-display" class="text-3xl font-semibold text-slate-900 mt-0.5 h-10 tracking-wide transition-all duration-300">Vietnam</p>
+                
+                <div id="recording-status" class="hidden mt-2 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/25 text-rose-600 font-semibold text-[11px]">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 pulse-slow"></span>
+                    <span>O-RECORDING (SILENT)</span>
+                </div>
+            </div>
+
+            <div id="keypad" class="grid grid-cols-3 gap-x-5 gap-y-3.5 px-4 my-auto justify-items-center transition-all duration-500">
+                <button onclick="pressKey('1')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-2xl font-semibold text-slate-800">1</span><span class="text-[9px] text-slate-400 font-bold">&nbsp;</span></button>
+                <button onclick="pressKey('2')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-2xl font-semibold text-slate-800">2</span><span class="text-[9px] text-slate-400 font-bold">ABC</span></button>
+                <button onclick="pressKey('3')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-2xl font-semibold text-slate-800">3</span><span class="text-[9px] text-slate-400 font-bold">DEF</span></button>
+                <button onclick="pressKey('4')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-2xl font-semibold text-slate-800">4</span><span class="text-[9px] text-slate-400 font-bold">GHI</span></button>
+                <button onclick="pressKey('5')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-2xl font-semibold text-slate-800">5</span><span class="text-[9px] text-slate-400 font-bold">JKL</span></button>
+                <button onclick="pressKey('6')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-2xl font-semibold text-slate-800">6</span><span class="text-[9px] text-slate-400 font-bold">MNO</span></button>
+                <button onclick="pressKey('7')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-2xl font-semibold text-slate-800">7</span><span class="text-[9px] text-slate-400 font-bold">PQRS</span></button>
+                <button onclick="pressKey('8')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-2xl font-semibold text-slate-800">8</span><span class="text-[9px] text-slate-400 font-bold">TUV</span></button>
+                <button onclick="pressKey('9')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-2xl font-semibold text-slate-800">9</span><span class="text-[9px] text-slate-400 font-bold">WXYZ</span></button>
+                <button onclick="pressKey('*')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-3xl font-light text-slate-700 pt-1">*</span></button>
+                <button onclick="pressKey('0')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-2xl font-semibold text-slate-800">0</span><span class="text-[11px] text-slate-400 font-bold -mt-1">+</span></button>
+                <button onclick="pressKey('#')" class="glass-button w-19 h-19 rounded-full flex flex-col items-center justify-center"><span class="text-xl font-semibold text-slate-800">#</span></button>
+            </div>
+
+            <div id="incall-actions" class="hidden grid grid-cols-3 gap-y-6 text-center my-auto animation-fade-in">
+                <button onclick="toggleInCallItem(this)" class="flex flex-col items-center gap-2 group"><div class="w-16 h-16 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-slate-800 group-active:scale-90 transition-transform"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 0 3-3v-4.5a3 3 0 1 0-6 0v4.5a3 3 0 0 0 3 3Z" /></svg></div><span class="text-xs font-semibold text-slate-700">Mute</span></button>
+                <button onclick="toggleInCallItem(this)" class="flex flex-col items-center gap-2 group"><div class="w-16 h-16 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-slate-800 group-active:scale-90 transition-transform"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" /></svg></div><span class="text-xs font-semibold text-slate-700">Hold</span></button>
+                <button onclick="toggleInCallItem(this)" class="flex flex-col items-center gap-2 group"><div class="w-16 h-16 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-slate-800 group-active:scale-90 transition-transform"><svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z" /></svg></div><span class="text-xs font-semibold text-slate-700">Speaker</span></button>
+            </div>
+
+            <div class="flex items-center justify-between px-8 mb-2">
+                <button id="record-toggle" onclick="toggleRecordingFeature()" class="w-14 h-14 rounded-full flex items-center justify-center border border-slate-300/40 bg-white/20 text-slate-600 transition-transform active:scale-95" title="Toggle Silent Call Recording">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 0 3-3v-4.5a3 3 0 1 0-6 0v4.5a3 3 0 0 0 3 3Z" /></svg>
+                </button>
+
+                <button id="main-call-btn" onclick="triggerCallAction()" class="w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center border border-emerald-400 text-white shadow-lg shadow-emerald-500/20 active:scale-90 transition-all duration-300 transform">
+                    <svg id="call-icon" class="w-9 h-9 fill-current transition-transform duration-500" viewBox="0 0 24 24">
+                        <path d="M6.62 10.79a15.09 15.09 0 006.59 6.59l2.2-2.2a1 1 0 011.11-.27 11.36 11.36 0 004.25 1.21 1 1 0 011 1V21a1 1 0 01-1 1A19 19 0 013 3a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 001.21 4.25 1 1 0 01-.27 1.11l-2.2 2.2z"/>
+                    </svg>
+                </button>
+
+                <button id="backspace-btn" onclick="deleteLastDigit()" class="w-14 h-14 rounded-full flex items-center justify-center text-slate-600 active:scale-90 transition-transform">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12L12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.796-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.299 0-.585-.119-.796-.33Z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = "";
+        let isAutoRecordEnabled = false;
+        let isCallActive = false;
+
+        // Custom Simulated Google Dialer Database Rules
+        const databaseMocks = {
+            "141": { name: "Potential Fraud", type: "spam" },
+            "800": { name: "Google Support", type: "verified" },
+            "911": { name: "Emergency Line", type: "verified" }
+        };
+
+        function pressKey(digit) {
+            playTones(digit);
+            
+            if (currentInput === "Vietnam" || currentInput === "") {
+                currentInput = digit;
+            } else { 
+                currentInput += digit; 
+            }
+            
+            // Native UI element transitions
+            animateElement('#avatar', [{ transform: 'scale(0.95)' }, { transform: 'scale(1)' }], 200);
+            evaluateSmartFeatures(currentInput);
+            updateDisplay();
+        }
+
+        function deleteLastDigit() {
+            if (currentInput.length > 0 && currentInput !== "Vietnam") {
+                currentInput = currentInput.slice(0, -1);
+                if (currentInput === "") {
+                    currentInput = "Vietnam";
+                    resetSmartHeader();
+                } else {
+                    evaluateSmartFeatures(currentInput);
+                }
+                updateDisplay();
+            }
+        }
+
+        // Google Dialer Smart Identification logic engine
+        function evaluateSmartFeatures(input) {
+            const panel = document.getElementById('app-panel');
+            const badge = document.getElementById('google-badge');
+            const badgeText = document.getElementById('badge-text');
+            const nameLabel = document.getElementById('contact-name');
+            const liquid = document.getElementById('liquid-engine');
+
+            // Catch prefix matches
+            let found = false;
+            for (let key in databaseMocks) {
+                if (input.startsWith(key)) {
+                    found = databaseMocks[key];
+                    break;
+                }
+            }
+
+            if (found) {
+                badge.classList.remove('opacity-0', 'translate-y-[-4px]');
+                nameLabel.innerText = found.name;
+                
+                if (found.type === 'spam') {
+                    panel.className = "glass-panel w-full flex-1 mt-6 rounded-[42px] p-5 flex flex-col justify-between overflow-hidden z-10 theme-spam";
+                    liquid.style.background = "radial-gradient(circle, rgba(239,68,68,0.3) 0%, rgba(220,38,38,0.1) 50%, rgba(0,0,0,0) 70%)";
+                    badgeText.innerText = "Spam / Fraud Alert";
+                    badge.className = badge.className.replace('text-slate-700', 'text-rose-600');
+                } else if (found.type === 'verified') {
+                    panel.className = "glass-panel w-full flex-1 mt-6 rounded-[42px] p-5 flex flex-col justify-between overflow-hidden z-10 theme-verified";
+                    liquid.style.background = "radial-gradient(circle, rgba(16,185,129,0.3) 0%, rgba(4,120,87,0.1) 50%, rgba(0,0,0,0) 70%)";
+                    badgeText.innerText = "Verified Directory Connection";
+                    badge.className = badge.className.replace('text-rose-600', 'text-emerald-600');
+                }
+            } else {
+                // Default search behavior when typing custom numbers
+                if(input.length > 3) {
+                    nameLabel.innerText = "Google Cloud Lookup...";
+                    badge.classList.add('opacity-0');
+                } else {
+                    nameLabel.innerText = "Unknown Number";
+                    resetSmartHeader();
+                }
+            }
+        }
+
+        function resetSmartHeader() {
+            document.getElementById('app-panel').className = "glass-panel w-full flex-1 mt-6 rounded-[42px] p-5 flex flex-col justify-between overflow-hidden z-10";
+            document.getElementById('google-badge').classList.add('opacity-0', 'translate-y-[-4px]');
+            document.getElementById('liquid-engine').style.background = "radial-gradient(circle, rgba(14,165,233,0.25) 0%, rgba(99,102,241,0.15) 40%, rgba(255,255,255,0) 70%)";
+            if(currentInput === "Vietnam") document.getElementById('contact-name').innerText = "GM VT";
+        }
+
+        function updateDisplay() { 
+            document.getElementById('dial-display').innerText = currentInput; 
+        }
+
+        // Toggle Native Screen Transitions between Call states
+        function triggerCallAction() {
+            const keypad = document.getElementById('keypad');
+            const incall = document.getElementById('incall-actions');
+            const callBtn = document.getElementById('main-call-btn');
+            const callIcon = document.getElementById('call-icon');
+            const backspace = document.getElementById('backspace-btn');
+            const glow = document.getElementById('avatar-glow');
+
+            if (!isCallActive) {
+                // Transform view layout into Dynamic Active Call Screen
+                isCallActive = true;
+                glow.classList.remove('opacity-0');
+                backspace.classList.add('opacity-0', 'pointer-events-none');
+                
+                // Spring scale animation
+                animateElement('#app-panel', [{ transform: 'scale(1)' }, { transform: 'scale(0.98)' }, { transform: 'scale(1)' }], 400);
+
+                keypad.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                setTimeout(() => {
+                    keypad.classList.add('hidden');
+                    incall.classList.remove('hidden');
+                    // Fade it in smoothly
+                    animateElement(incall, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'translateY(0)' }], 350);
+                }, 200);
+
+                // Change Call button color and rotate vector asset icon
+                callBtn.classList.remove('bg-emerald-500', 'border-emerald-400');
+                callBtn.classList.add('bg-rose-500', 'border-rose-400');
+                callIcon.style.transform = "rotate(135deg)";
+            } else {
+                // Hang up line state inversion
+                isCallActive = false;
+                glow.classList.add('opacity-0');
+                backspace.classList.remove('opacity-0', 'pointer-events-none');
+
+                incall.classList.add('opacity-0');
+                setTimeout(() => {
+                    incall.classList.add('hidden');
+                    keypad.classList.remove('hidden');
+                    keypad.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                    animateElement(keypad, [{ opacity: 0, transform: 'scale(0.95)' }, { opacity: 1, transform: 'scale(1)' }], 300);
+                }, 200);
+
+                callBtn.classList.remove('bg-rose-500', 'border-rose-400');
+                callBtn.classList.add('bg-emerald-500', 'border-emerald-400');
+                callIcon.style.transform = "rotate(0deg)";
+            }
+        }
+
+        function toggleInCallItem(button) {
+            const targetInnerCircle = button.querySelector('div');
+            targetInnerCircle.classList.toggle('bg-blue-500/40');
+            targetInnerCircle.classList.toggle('border-blue-400');
+            animateElement(targetInnerCircle, [{ transform: 'scale(0.85)' }, { transform: 'scale(1)' }], 250);
+        }
+
+        function toggleRecordingFeature() {
+            isAutoRecordEnabled = !isAutoRecordEnabled;
+            const recordPill = document.getElementById('recording-status');
+            const micButton = document.getElementById('record-toggle');
+            
+            animateElement(micButton, [{ transform: 'scale(0.8)' }, { transform: 'scale(1)' }], 300);
+
+            if (isAutoRecordEnabled) {
+                recordPill.classList.remove('hidden');
+                micButton.classList.add('bg-rose-500/20', 'text-rose-600', 'border-rose-500/40');
+            } else {
+                recordPill.classList.add('hidden');
+                micButton.classList.remove('bg-rose-500/20', 'text-rose-600', 'border-rose-500/40');
+            }
+        }
+
+        // Web Animations API helper for high frame rate mobile renders
+        function animateElement(selector, keyframes, duration) {
+            const element = typeof selector === 'string' ? document.querySelector(selector) : selector;
+            if(element) {
+                element.animate(keyframes, { duration: duration, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+            }
+        }
+
+        function playTones(digit) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const frequencies = {
+                '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
+                '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
+                '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
+                '*': [941, 1209], '0': [941, 1336], '#': [941, 1477]
+            };
+            const pair = frequencies[digit] || [800, 1200];
+            const osc1 = ctx.createOscillator(); const osc2 = ctx.createOscillator(); const gain = ctx.createGain();
+            osc1.frequency.value = pair[0]; osc2.frequency.value = pair[1];
+            gain.gain.setValueAtTime(0.04, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+            osc1.connect(gain); osc2.connect(gain); gain.connect(ctx.destination);
+            osc1.start(); osc2.start(); osc1.stop(ctx.currentTime + 0.1); osc2.stop(ctx.currentTime + 0.1);
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
+        }
+    </script>
+</body>
+</html>
